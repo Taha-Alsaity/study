@@ -26,11 +26,11 @@
         <p style="text-align: right; margin-top: 40px;">{{post.datetime}}</p>
         <nav style=" padding-top: 10px; padding-bottom: 0px; border-top: 2px silver solid; display: flex; justify-content: space-around;">
           {% if post.id in check %}
-       <button  id="{{ post.id }}" onclick="like({{ post.id }} , {{check}} )" class="btn btn-info fa fa-thumbs-down"></button>
+       <button style="background-color: rgb(40, 40, 255);  width: 50px; height: 35px; margin-top: 3px;"   id="{{ post.id }}" onclick="like({{ post.id }} , {{check}} )" class="btn btn-info fa fa-thumbs-down"></button>
         {% else %}
       
           <!-- Use an element to toggle between a like/dislike icon -->
-          <button  id="{{ post.id }}" onclick="like({{ post.id }},{{check}})" class="btn btn-info fa fa-thumbs-up"></button>
+          <button style="background-color: rgb(40, 40, 255);  width: 50px; height: 35px; margin-top: 3px;"   id="{{ post.id }}" onclick="like({{ post.id }},{{check}})" class="btn btn-info fa fa-thumbs-up"></button>
         {% endif %}
         {% if post.user.id == request.user.id %}
            <div>
@@ -76,6 +76,59 @@
       </nav>
     {% else %}
     <h6 style="padding-bottom: 30px;">You should log in first <a href="{% url 'login' %}">login</a></h6>
+
+
+    {% for post in page_posts %}
+    
+    <div class="post" style=" border-radius: 5px; margin: 20px; padding: 10px; border: 2px silver solid ; box-shadow: 0px 2px 5px grey; width: 600px; margin-left: auto; margin-right: auto; text-align: center;">
+        <h4 style="text-align: left; display: flex;"><a href="{% url 'profile' id=post.user.id %}"><b>{{post.user}}</b></a><p style=" align-items: center; margin-left: 5px; margin-top: 9px; font: 0.6em sans-serif;">{{post.user.email}}</p></h4>
+        <p style="text-align: left;" id="content_{{post.id}}">{{post.content}} </p>
+        <p style="text-align: right; margin-top: 40px;">{{post.datetime}}</p>
+        <nav style=" padding-top: 10px; padding-bottom: 0px; border-top: 2px silver solid; display: flex; justify-content: space-around;">
+         
+
+        {% if post.user.id == request.user.id %}
+           <div>
+            <button class="btn btn-primary" data-target="#modal_edit_post_{{ post.id }}" data-toggle="modal"  > Edit</button>
+           </div>
+           <div class="modal fade" id="modal_edit_post_{{ post.id }}" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="modal_edit_post_{{ post.id }}_label">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit Post</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <textarea name="" id="newcontent_{{ post.id }}" name="content" class="form-control" cols="60" rows="5">{{ post.content }}</textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-dismiss="modal"   onclick="edit({{ post.id }})">Save changes</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+        
+        {% endif %}
+    </div>
+    {% endfor %}
+
+  
+       <nav style="text-align: center; display: flex; justify-content: center; margin-top: 40px;" aria-label="Page navigation example">
+        <ul class="pagination">
+          {% if page_posts.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.previous_page_number}}">Previous</a></li>
+          {% else %}
+          {% endif %}
+          {% if page_posts.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.next_page_number}}">Next</a></li>
+          {% else %}
+          {% endif %}
+        </ul>
+      </nav>
     {% endif %}
 
     <script >
@@ -134,7 +187,7 @@ function getCookie(name) {
           method: "POST",
           headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")}
         })
-        .then(response => response.json)
+        .then(response => response.json())
         .then(result => {
             
             btn.classList.remove('fa-thumbs-up');
@@ -148,13 +201,13 @@ function getCookie(name) {
           method: "POST",
           headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")}
         })
-        .then(response => response.json)
+        .then(response => response.json())
         .then(result => {
             btn.classList.remove('fa-thumbs-down');
             btn.classList.add('fa-thumbs-up');
         })
 
     }
-}
+};
     </script>
 {% endblock %}

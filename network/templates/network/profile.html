@@ -41,21 +41,46 @@
 {% endif %}
 {% for post in page_posts %}
     
-<div class="post" style=" border-radius: 5px; margin: 20px; padding: 10px; border: 2px silver solid ; box-shadow: 0px 2px 5px grey; width: 600px; margin-left: auto; margin-right: auto; text-align: center;">
-    <h4 style="text-align: left; display: flex;"><a href="{% url 'profile' id=post.user.id %}"><b>{{post.user}}</b></a><p style=" align-items: center; margin-left: 5px; margin-top: 9px; font: 0.6em sans-serif;">{{post.user.email}}</p></h4>
-    <p style="text-align: left;">{{post.content}}</p>
-    <p style="text-align: right; margin-top: 40px;">{{post.datetime}}</p>
-    <nav style=" padding-top: 10px; padding-bottom: 0px; border-top: 2px silver solid; display: flex; justify-content: space-around;">
-      {% if post.id in checks %}
-    <a class="likeaction" href="{% url 'unlike' postid=post.id userid=request.user.id  %}" > <i style="align-items: center; margin-right: 5px;" onclick="myFunction(this)" class="fa fa-thumbs-down"></i>unlike</a>
-    {% else %}
-    <a class="likeaction" href="{% url 'like' postid=post.id userid=request.user.id  %}" >
-      <!-- Use an element to toggle between a like/dislike icon -->
-      <i style="align-items: center; margin-right: 5px;" onclick="myFunction(this)" class="fa fa-thumbs-up"></i>like</a>
-    {% endif %}
-    <p>edit</p></nav>
-</div>
-{% endfor %}
+    <div class="post" style=" border-radius: 5px; margin: 20px; padding: 10px; border: 2px silver solid ; box-shadow: 0px 2px 5px grey; width: 600px; margin-left: auto; margin-right: auto; text-align: center;">
+        <h4 style="text-align: left; display: flex;"><a href="{% url 'profile' id=post.user.id %}"><b>{{post.user}}</b></a><p style=" align-items: center; margin-left: 5px; margin-top: 9px; font: 0.6em sans-serif;">{{post.user.email}}</p></h4>
+        <p style="text-align: left;" id="content_{{post.id}}">{{post.content}} </p>
+        <p style="text-align: right; margin-top: 40px;">{{post.datetime}}</p>
+        <nav style=" padding-top: 10px; padding-bottom: 0px; border-top: 2px silver solid; display: flex; justify-content: space-around;">
+          {% if post.id in checks %}
+       <button style="background-color: rgb(40, 40, 255);  width: 50px; height: 35px; margin-top: 3px;"   id="{{ post.id }}" onclick="like({{ post.id }} , {{checks}} )" class="btn btn-info fa fa-thumbs-down"></button>
+        {% else %}
+      
+          <!-- Use an element to toggle between a like/dislike icon -->
+          <button style="background-color: rgb(40, 40, 255);  width: 50px; height: 35px; margin-top: 3px;"   id="{{ post.id }}" onclick="like({{ post.id }},{{checks}})" class="btn btn-info fa fa-thumbs-up"></button>
+        {% endif %}
+        {% if post.user.id == request.user.id %}
+           <div>
+            <button class="btn btn-primary" data-target="#modal_edit_post_{{ post.id }}" data-toggle="modal"  > Edit</button>
+           </div>
+           <div class="modal fade" id="modal_edit_post_{{ post.id }}" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="modal_edit_post_{{ post.id }}_label">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit Post</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <textarea name="" id="newcontent_{{ post.id }}" name="content" class="form-control" cols="60" rows="5">{{ post.content }}</textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-primary" data-dismiss="modal"   onclick="edit({{ post.id }})">Save changes</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+        
+        {% endif %}
+    </div>
+    {% endfor %}
     <nav style="text-align: center; display: flex; justify-content: center; margin-top: 40px;" aria-label="Page navigation example">
         <ul class="pagination">
           {% if page_posts.has_previous %}
@@ -72,5 +97,83 @@
     <h6>You should log in first <a href="{% url 'login' %}">login</a></h6>
     {% endif %}
 
-
+    <script >
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return parts.pop().split(';').shift().trim();
+        }
+        return null;
+      }
+            function edit(id){
+              const newcontent = document.getElementById(`newcontent_${id}`).value;
+              const content = document.getElementById(`content_${id}`);
+              const modal = document.getElementById(`modal_edit_post_${id}`);
+              fetch(`/edit/${id}`, {
+                credentials: 'include',
+                method: "POST",
+                headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")},
+                body: JSON.stringify({
+                  content: newcontent
+                })
+              }) 
+          
+          
+              .then(response => response.json())
+              .then(result => {
+                    content.innerHTML = result.data;
+                    
+                    modal.classList.remove('show');
+                    
+                    modal.setAttribute('aria-hidden','true');
+                    modal.setAttribute('style', 'display: none');
+                    // get modal backdrops
+                    const modalsBackdrops = document.getElementsByClassName('modal-backdrop');
+                    for(let i=0; i<modalsBackdrops.length; i++){
+                    document.body.removeChild (modalsBackdrops [i]);
+                    }
+              
+            })
+          };
+          function like(id, whoYouLiked){
+          const btn = document.getElementById(`${id}`);
+      
+          // Determine initial liked state
+          var liked = whoYouLiked.indexOf(id) >= 0;
+      
+          // Toggle the liked state
+          liked = !liked;
+      
+          // Update the button class based on the new liked state
+          if(liked){
+              // If liked, send request to add like and change icon to thumbs-down
+              fetch(`/like/${id}`, {
+                credentials: 'include',
+                method: "POST",
+                headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")}
+              })
+              .then(response => response.json())
+              .then(result => {
+                  
+                  btn.classList.remove('fa-thumbs-up');
+                  btn.classList.add('fa-thumbs-down');
+              })
+      
+          } else {
+              // If not liked, send request to remove like and change icon to thumbs-up
+              fetch(`/unlike/${id}`, {
+                credentials: 'include',
+                method: "POST",
+                headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")}
+              })
+              .then(response => response.json())
+              .then(result => {
+                  btn.classList.remove('fa-thumbs-down');
+                  btn.classList.add('fa-thumbs-up');
+              })
+      
+          }
+      };
+          </script>
 {% endblock %}

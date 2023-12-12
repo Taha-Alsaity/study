@@ -41,7 +41,15 @@ def edit(request, post_id):
 def follow_sec(request):
     user = User.objects.get(pk=request.user.id)
     following = Follow.objects.filter(user=user)
-    
+    likes =  Like.objects.all()
+    check = []
+    try:
+        for like in likes:
+            if like.user.id == request.user.id:
+                check.append(like.post_liked.id)
+
+    except:
+        check = []
     posts = Post.objects.all().order_by("id").reverse()
     all_posts = []
     for post in posts:
@@ -53,7 +61,9 @@ def follow_sec(request):
     page_posts = postsv2.get_page(request.GET.get('page'))
     return render(request, "network/index.html",{
         'posts':postsv2,
-        'page_posts': page_posts
+        'page_posts': page_posts,
+        'likes':likes,
+        'check': check
     })
     
 def create(request):
@@ -100,7 +110,8 @@ def profile(request, id):
         'follower':follower,
         'following':following,
         'check': check_follow,
-        'checks':check
+        'checks':check,
+        'likes':likes,
         
     })
 def follow(request, userid,followerid):
