@@ -183,21 +183,21 @@ function getCookie(name) {
     if(liked){
         // If liked, send request to add like and change icon to thumbs-down
         fetch(`/like/${id}`, {
-          credentials: 'include',
+          
           method: "POST",
-          headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")}
+          headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")},
         })
         .then(response => response.json())
         .then(result => {
-            
+            whoYouLiked.push(id);
             btn.classList.remove('fa-thumbs-up');
             btn.classList.add('fa-thumbs-down');
-        })
+        });
 
     } else {
         // If not liked, send request to remove like and change icon to thumbs-up
         fetch(`/unlike/${id}`, {
-          credentials: 'include',
+          
           method: "POST",
           headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")}
         })
@@ -205,9 +205,9 @@ function getCookie(name) {
         .then(result => {
             btn.classList.remove('fa-thumbs-down');
             btn.classList.add('fa-thumbs-up');
-        })
+        });
 
-    }
+    };
 };
     </script>
 {% endblock %}
